@@ -32,8 +32,8 @@
 							<tool id="de.innot.avreclipse.tool.compiler.winavr.app.debug.833203845" name="AVR Compiler" superClass="de.innot.avreclipse.tool.compiler.winavr.app.debug">
 								<option id="de.innot.avreclipse.compiler.option.debug.level.61490228" name="Generate Debugging Info" superClass="de.innot.avreclipse.compiler.option.debug.level"/>
 								<option id="de.innot.avreclipse.compiler.option.optimize.695841548" name="Optimization Level" superClass="de.innot.avreclipse.compiler.option.optimize" value="de.innot.avreclipse.compiler.optimize.size" valueType="enumerated"/>
-								<option id="de.innot.avreclipse.compiler.option.warnerr.1930168733" superClass="de.innot.avreclipse.compiler.option.warnerr" value="true" valueType="boolean"/>
-								<option id="de.innot.avreclipse.compiler.option.otherflags.1933679775" superClass="de.innot.avreclipse.compiler.option.otherflags" value="-Wpadded" valueType="string"/>
+								<option id="de.innot.avreclipse.compiler.option.warnerr.1930168733" name="Warnings as Errors (-Werror)" superClass="de.innot.avreclipse.compiler.option.warnerr" value="true" valueType="boolean"/>
+								<option id="de.innot.avreclipse.compiler.option.otherflags.1933679775" name="Other flags" superClass="de.innot.avreclipse.compiler.option.otherflags" value="-Wpadded" valueType="string"/>
 								<inputType id="de.innot.avreclipse.compiler.winavr.input.416331482" name="C Source Files" superClass="de.innot.avreclipse.compiler.winavr.input"/>
 							</tool>
 							<tool id="de.innot.avreclipse.tool.cppcompiler.app.debug.736970800" name="AVR C++ Compiler" superClass="de.innot.avreclipse.tool.cppcompiler.app.debug">
@@ -95,6 +95,7 @@
 								<option id="de.innot.avreclipse.cppcompiler.option.optimize.675535996" name="Optimization Level" superClass="de.innot.avreclipse.cppcompiler.option.optimize" value="de.innot.avreclipse.cppcompiler.optimize.size" valueType="enumerated"/>
 							</tool>
 							<tool id="de.innot.avreclipse.tool.linker.winavr.app.release.1654929927" name="AVR C Linker" superClass="de.innot.avreclipse.tool.linker.winavr.app.release">
+								<option id="de.innot.avreclipse.linker.option.libs.1313260382" name="Libraries (-l)" superClass="de.innot.avreclipse.linker.option.libs" valueType="libs"/>
 								<inputType id="de.innot.avreclipse.tool.linker.input.313286050" name="OBJ Files" superClass="de.innot.avreclipse.tool.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
