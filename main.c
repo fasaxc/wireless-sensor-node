@@ -4,6 +4,7 @@
 #include "sensor_node.h"
 #include <avr/sleep.h>
 #include <avr/interrupt.h>
+#include <avr/wdt.h>
 
 #define TX_PORT PORTB
 #define TX_TOGGLE_REG PINB
@@ -28,6 +29,8 @@ ISR(ADC_vect)
 {
     adc_done = 1;
 }
+
+EMPTY_INTERRUPT(WDT_vect);
 
 inline static void do_adc_conversion() {
     adc_done = 0;
@@ -66,8 +69,39 @@ inline static uint16_t read_temperature() {
     return result;
 }
 
+#define WDT_DURATION 8 /* Seconds */
+#define SLEEP_TIME 240 /* Seconds */
+
+static void deep_sleep()
+{
+    // Select the deepest sleep mode
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+
+    // Reset the watchdog timer to avoid a race.
+    wdt_reset();
+    // Enable the watchdog interrupt, or we won't wake up again!
+    WDTCR |= _BV(WDTIE);
+
+    // The maximum WDT timeout is 8 seconds so we have to loop to last longer
+    // than that.
+    for (uint8_t i = 0; i < (SLEEP_TIME / WDT_DURATION); ++i)
+    {
+        // Go to sleep until the watchdog timer pops.
+        sleep_mode();
+    }
+
+    // Turn off the watchdog interrupt.
+    WDTCR &= ~_BV(WDTIE);
+}
+
 int main(void)
 {
+    // Make the watchdog timer cause an interrupt rather than system reset and
+    // use C/1024 prescaler.
+    MCUSR &= ~_BV(WDRF);
+    wdt_disable();
+    WDTCR |= _BV(WDTIF) | _BV(WDP3) | _BV(WDP0);
+
     // Configure all pins as outputs except the temperature input pin.
     DDRB = 0xFF ^ _BV(TEMP_SENSE_INPUT_DIG_PIN);
     // Disable digital input buffer on the analog input pin.
@@ -83,7 +117,7 @@ int main(void)
         manchester_union.manchester_packet.reading_type = READING_TYPE_TEMP;
         manchester_union.manchester_packet.reading = read_temperature();
         transmit();
-        _delay_ms(500);
+        deep_sleep();
     }
 
     return (1); // should never happen
