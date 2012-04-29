@@ -8,18 +8,7 @@
 
 void transmit(void);
 
-
-// Maximum rate at which the transmitter can transmit (bits/s).  Since we're
-// using Manchester encoding, we use two wire bits to represent one data bit.
-#define TX_MAX_BAUD (4800)
-// Just to be conservative, transmit at half the rate.
-#define TX_BAUD (TX_MAX_BAUD/8)
-// Each manchester-encoded bit uses 2 bits on the wire.  Time for each half bit.
-#define WORK_CYCLES_PER_BIT 10
-#define WORK_TIME_PER_BIT (1000.0 * WORK_CYCLES_PER_BIT / F_CPU)
-#define HALF_BIT_DELAY_TIME_MILLIS ((1000.0 / TX_BAUD) - WORK_TIME_PER_BIT)
-
-#define PACKET_LENGTH 5
+#define HALF_BIT_DELAY_TIME_MILLIS 1.0
 
 struct manchester_packet {
     manchester_data_t data;
@@ -74,10 +63,10 @@ void transmit_byte(uint8_t b)
 void transmit(void)
 {
     // Transmit preamble
-    for (int i = 2; i > 0; i--) {
+    for (int i = 10; i > 0; i--) {
         transmit_byte(0xFF);
     }
-    transmit_byte(0xF0);
+    transmit_byte(0x7F);
 
     // Transmit data
     int len = sizeof(struct manchester_packet);
