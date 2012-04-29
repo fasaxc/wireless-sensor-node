@@ -12,6 +12,9 @@
 #define TEMP_SENSE_POWER_PORT PORTB
 #define TEMP_SENSE_POWER_PIN PB0
 
+#define RADIO_POWER_PORT PORTB
+#define RADIO_POWER_PIN PB1
+
 #define TEMP_SENSE_INPUT_DIG_PIN PB4
 #define TEMP_SENSE_INPUT_AN_PIN 2
 
@@ -112,6 +115,10 @@ void transmit_byte(uint8_t b)
 
 inline void transmit(void)
 {
+    // Power up radio.
+    RADIO_POWER_PORT |= _BV(RADIO_POWER_PIN);
+    _delay_ms(0.1);
+
     manchester_union.manchester_packet.checksum = calculate_checksum(&manchester_union.manchester_packet);
 
     // Transmit preamble
@@ -130,7 +137,9 @@ inline void transmit(void)
     // Generate one final transition
     TX_PORT ^= (char)_BV(TX_PIN);
     _delay_ms(HALF_BIT_DELAY_TIME_MILLIS);
-    // Then leave the line high.
-    TX_PORT |= (char)_BV(TX_PIN);
+    // Then leave the line low.
+    TX_PORT &= (char)~_BV(TX_PIN);
+
+    RADIO_POWER_PORT &= ~_BV(RADIO_POWER_PIN);
 }
 
