@@ -8,27 +8,17 @@
 
 void transmit(void);
 
-#define HALF_BIT_DELAY_TIME_MILLIS 1.0
-
-struct manchester_packet {
-    manchester_data_t data;
-    uint16_t checksum;
-} __attribute__((packed));
-
-static union {
-    struct manchester_packet manchester_packet;
-    char manchester_data[sizeof(struct manchester_packet)];
-} manchester_union;
+#define HALF_BIT_DELAY_TIME_MILLIS 0.5
 
 int main(void)
 {
     DDRB = 255;
     while (1)
     {
-        manchester_union.manchester_packet.data.node_id = 1;
-        manchester_union.manchester_packet.data.seq_no += 1;
-        manchester_union.manchester_packet.data.reading_type = READING_TYPE_TEMP;
-        manchester_union.manchester_packet.data.reading = 0xBEEF;
+        manchester_union.manchester_packet.node_id = 1;
+        manchester_union.manchester_packet.seq_no += 1;
+        manchester_union.manchester_packet.reading_type = READING_TYPE_TEMP;
+        manchester_union.manchester_packet.reading = 0xBEEF;
         transmit();
         _delay_ms(500);
     }
@@ -60,20 +50,27 @@ void transmit_byte(uint8_t b)
     }
 }
 
-void transmit(void)
+inline void transmit(void)
 {
+    manchester_union.manchester_packet.checksum = calculate_checksum(&manchester_union.manchester_packet);
+
     // Transmit preamble
-    for (int i = 10; i > 0; i--) {
+    for (int i = 4; i > 0; i--) {
         transmit_byte(0xFF);
     }
     transmit_byte(0x7F);
 
     // Transmit data
-    int len = sizeof(struct manchester_packet);
+    int len = sizeof(manchester_union);
     for (int i = 0; i < len; i++)
     {
         char b = manchester_union.manchester_data[i];
         transmit_byte(b);
     }
+    // Generate one final transition
+    TX_PORT ^= (char)_BV(TX_PIN);
+    _delay_ms(HALF_BIT_DELAY_TIME_MILLIS);
+    // Then leave the line high.
+    TX_PORT |= (char)_BV(TX_PIN);
 }
 
