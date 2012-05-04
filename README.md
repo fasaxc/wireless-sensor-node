@@ -4,7 +4,7 @@ Wireless Sensor Node
 This repo contains the source code and assets for my wireless sensor node 
 project.
 
-<img src="https://github.com/fasaxc/WirelessSensorNode/raw/master/assets/box.jpg" width="270" height="427" alt="Completed sensor module">
+<img src="https://github.com/fasaxc/WirelessSensorNode/raw/master/assets/box.jpg" width="333" height="500" alt="Completed sensor module">
 
 Code
 ----
