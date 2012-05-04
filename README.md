@@ -6,6 +6,8 @@ project.
 
 <img src="https://github.com/fasaxc/WirelessSensorNode/raw/master/assets/box.jpg" width="333" height="500" alt="Completed sensor module">
 
+<img src="https://github.com/fasaxc/WirelessSensorNode/raw/master/assets/node.jpg" width="500" height="333" alt="Completed sensor module">
+
 Code
 ----
 
