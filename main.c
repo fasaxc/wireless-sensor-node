@@ -59,6 +59,9 @@ ISR(ADC_vect)
 
 EMPTY_INTERRUPT(WDT_vect);
 
+static uint8_t rand_byte();
+static void mix_rand(uint8_t x);
+
 inline static void do_adc_conversion() {
     adc_done = 0;
     set_sleep_mode(SLEEP_MODE_ADC);
@@ -66,6 +69,7 @@ inline static void do_adc_conversion() {
     while (!adc_done) {
         // Just in case we were woken by a different interrupt.
     }
+    mix_rand((uint8_t)ADCW);
 }
 
 inline static uint16_t read_temperature() {
@@ -96,8 +100,8 @@ inline static uint16_t read_temperature() {
     return result;
 }
 
-#define WDT_DURATION 8 /* Seconds */
-#define SLEEP_TIME 240 /* Seconds */
+#define WDT_DURATION 2 /* Seconds */
+#define SLEEP_TIME 234 /* Seconds */
 
 static void deep_sleep()
 {
@@ -109,9 +113,11 @@ static void deep_sleep()
     // Enable the watchdog interrupt, or we won't wake up again!
     WDTCR |= _BV(WDTIE);
 
-    // The maximum WDT timeout is 8 seconds so we have to loop to last longer
-    // than that.
-    for (uint8_t i = 0; i < (SLEEP_TIME / WDT_DURATION); ++i)
+    // The maximum WDT timeout is too short so we must loop to get an adequate
+    // delay.  Add a bit of randomness to the length of the loop to avoid
+    // collisions.
+    uint8_t num_sleeps = ((SLEEP_TIME / WDT_DURATION) + (rand_byte() & 7));
+    for (uint8_t i = 0; i < num_sleeps; ++i)
     {
         // Go to sleep until the watchdog timer pops.
         sleep_mode();
@@ -124,10 +130,10 @@ static void deep_sleep()
 int main(void)
 {
     // Make the watchdog timer cause an interrupt rather than system reset and
-    // use C/1024 prescaler.
+    // use C/256K prescaler.
     MCUSR &= ~_BV(WDRF);
     wdt_disable();
-    WDTCR |= _BV(WDTIF) | _BV(WDP3) | _BV(WDP0);
+    WDTCR |= _BV(WDTIF) | _BV(WDP2) | _BV(WDP1) | _BV(WDP0);
 
     // Configure all pins as outputs except the temperature input pin.
     DDRB = 0xFF ^ _BV(TEMP_SENSE_INPUT_DIG_PIN);
@@ -204,3 +210,44 @@ inline void transmit(void)
     RADIO_POWER_PORT &= ~_BV(RADIO_POWER_PIN);
 }
 
+static uint16_t lfsr_state;
+static uint8_t rand_byte()
+{
+    if (!lfsr_state)
+    {
+        // Can't allow LFSR to be all 0, it won't recover.
+        lfsr_state = 0xDEAD;
+    }
+    for (uint8_t i = 8; i>0; i--)
+    {
+        uint8_t new_bit = 0;
+        if (lfsr_state & (1 << 15)) {
+            new_bit = !new_bit;
+        }
+        if (lfsr_state & (1 << 13)) {
+            new_bit = !new_bit;
+        }
+        if (lfsr_state & (1 << 12)) {
+            new_bit = !new_bit;
+        }
+        if (lfsr_state & (1 << 10)) {
+            new_bit = !new_bit;
+        }
+        lfsr_state <<= 1;
+        lfsr_state |= new_bit;
+    }
+    return (uint8_t)lfsr_state;
+}
+
+static void mix_rand(uint8_t x)
+{
+    if (x & 1) {
+        uint8_t tmp = (lfsr_state & (1 << 15)) >> 15;
+        uint8_t tmp2 = (lfsr_state & (1 << 3)) >> 3;
+        if (tmp != tmp2)
+        {
+            lfsr_state ^= 1 << 3;
+            lfsr_state ^= 1 << 15;
+        }
+    }
+}
