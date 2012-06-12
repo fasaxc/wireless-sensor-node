@@ -33,6 +33,8 @@
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
 
+#define NODE_ID 3
+
 #define TX_PORT PORTB
 #define TX_TOGGLE_REG PINB
 #define TX_PIN PB3
@@ -135,8 +137,9 @@ int main(void)
     wdt_disable();
     WDTCR |= _BV(WDTIF) | _BV(WDP2) | _BV(WDP1) | _BV(WDP0);
 
-    // Configure all pins as outputs except the temperature input pin.
-    DDRB = 0xFF ^ _BV(TEMP_SENSE_INPUT_DIG_PIN);
+    // Configure all pins as outputs except the temperature input pin and the
+    // TX pin (which is tri-stated until we transmit).
+    DDRB = 0xFF ^ _BV(TEMP_SENSE_INPUT_DIG_PIN) ^ _BV(TX_PIN);
     // Disable digital input buffer on the analog input pin.
     DIDR0 |= _BV(TEMP_SENSE_INPUT_DIG_PIN);
 
@@ -145,7 +148,7 @@ int main(void)
 
     while (1)
     {
-        manchester_union.manchester_packet.node_id = 1;
+        manchester_union.manchester_packet.node_id = NODE_ID;
         manchester_union.manchester_packet.seq_no += 1;
         manchester_union.manchester_packet.reading_type = READING_TYPE_TEMP;
         manchester_union.manchester_packet.reading = read_temperature();
@@ -184,6 +187,7 @@ inline void transmit(void)
 {
     // Power up radio.
     RADIO_POWER_PORT |= _BV(RADIO_POWER_PIN);
+    DDRB |= _BV(TX_PIN);
     _delay_ms(0.1);
 
     manchester_union.manchester_packet.checksum = calculate_checksum(&manchester_union.manchester_packet);
@@ -204,10 +208,13 @@ inline void transmit(void)
     // Generate one final transition
     TX_PORT ^= (char)_BV(TX_PIN);
     _delay_ms(HALF_BIT_DELAY_TIME_MILLIS);
-    // Then leave the line low.
-    TX_PORT &= (char)~_BV(TX_PIN);
 
+    // Then disable the transmitter
     RADIO_POWER_PORT &= ~_BV(RADIO_POWER_PIN);
+
+    // And tri-state the TX pin
+    DDRB &= (char)~_BV(TX_PIN);
+    TX_PORT &= (char)~_BV(TX_PIN);
 }
 
 static uint16_t lfsr_state;
