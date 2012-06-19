@@ -33,9 +33,9 @@ Schematic
 
 <img src="https://github.com/fasaxc/WirelessSensorNode/raw/master/assets/schematic.png" alt="Schematic drawing">
 
-The TMP36 is driven directly by the ATTiny so that it can be powered down when not in use.  The 0.1uF capacitor smoothes the power to the TMP36, increasing its accuracy.  The 2k resistor prevents too much current from flowing through the base to the emitter of the transistor (it only takes a small current to saturate the transistor so any extra current isn't helpful and can be harmful).
+The TMP36 is driven directly by the ATTiny so that it can be powered down when not in use.  The 0.1uF capacitor smoothes the power to the TMP36, increasing its accuracy.
 
-The transmitter is powered via a basic NPN switching transistor.  The 10uF cap provides for the transient high current used for transmission.
+The transmitter is powered via a basic NPN switching transistor.  The 10uF cap provides for the transient high current used for transmission.  The 2k resistor prevents too much current from flowing through the base to the emitter of the transistor (it only takes a small current to saturate the transistor so any extra current isn't helpful and can be harmful).
 
 Assets
 ------
